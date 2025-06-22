@@ -33,63 +33,35 @@ class ApiService {
     this.setupInterceptors();
   }
 
-  /**
-   * Configures request and response interceptors for the axios instance
-   */
   private setupInterceptors(): void {
-    // Request interceptor to add authentication token
     this.axiosInstance.interceptors.request.use(
       (config) => {
         const token = authService.getAuthToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
-
-        // Log request details (remove in production)
-        console.log(
-          `Making ${config.method?.toUpperCase()} request to ${config.url}`
-        );
-
         return config;
       },
       (error) => {
-        console.error("Request interceptor error:", error);
         return Promise.reject(error);
       }
     );
-
-    // Response interceptor to handle common response scenarios
     this.axiosInstance.interceptors.response.use(
       (response) => {
-        // Log successful response (remove in production)
-        console.log(
-          `Response received: ${response.status} from ${response.config.url}`
-        );
         return response;
       },
       (error) => {
-        // Handle token expiration
         if (error.response?.status === 401) {
           authService.clearAuthToken();
-          // Optionally redirect to login page
           if (typeof window !== "undefined") {
             window.location.href = "/";
           }
         }
-
-        console.error(
-          "Response interceptor error:",
-          error.response?.status,
-          error.message
-        );
         return Promise.reject(error);
       }
     );
   }
 
-  /**
-   * Generic GET request method
-   */
   public async get<T>(
     endpoint: string,
     config?: AxiosRequestConfig
@@ -105,9 +77,6 @@ class ApiService {
     }
   }
 
-  /**
-   * Generic POST request method
-   */
   public async post<T, D = any>(
     endpoint: string,
     data?: D,
@@ -125,9 +94,6 @@ class ApiService {
     }
   }
 
-  /**
-   * Generic PUT request method
-   */
   public async put<T, D = any>(
     endpoint: string,
     data?: D,
@@ -145,9 +111,6 @@ class ApiService {
     }
   }
 
-  /**
-   * Generic DELETE request method
-   */
   public async delete<T>(
     endpoint: string,
     config?: AxiosRequestConfig
@@ -163,9 +126,6 @@ class ApiService {
     }
   }
 
-  /**
-   * Generic PATCH request method
-   */
   public async patch<T, D = any>(
     endpoint: string,
     data?: D,
@@ -183,9 +143,6 @@ class ApiService {
     }
   }
 
-  /**
-   * Handles and standardizes API errors
-   */
   private handleError(error: any): ApiError {
     if (error.response) {
       return {
@@ -213,23 +170,14 @@ class ApiService {
     };
   }
 
-  /**
-   * Updates the base URL for the API service
-   */
   public setBaseUrl(baseUrl: string): void {
     this.axiosInstance.defaults.baseURL = baseUrl;
   }
 
-  /**
-   * Adds a custom header to all requests
-   */
   public setHeader(key: string, value: string): void {
     this.axiosInstance.defaults.headers.common[key] = value;
   }
 
-  /**
-   * Removes a custom header from all requests
-   */
   public removeHeader(key: string): void {
     delete this.axiosInstance.defaults.headers.common[key];
   }

@@ -1,6 +1,6 @@
 import axios, { AxiosResponse, AxiosError } from "axios";
 
-// Types for API requests and responses
+
 export interface SignInRequest {
   username: string;
   email: string;
@@ -25,7 +25,7 @@ export interface ApiError {
   code: string;
 }
 
-// Configuration for the API client
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 const API_VERSION = "v1";
@@ -39,9 +39,7 @@ class AuthService {
     this.timeout = 10000; // 10 seconds timeout
   }
 
-  /**
-   * Creates an axios instance with default configuration
-   */
+
   private createAxiosInstance() {
     return axios.create({
       baseURL: this.baseUrl,
@@ -53,9 +51,7 @@ class AuthService {
     });
   }
 
-  /**
-   * Handles API errors and converts them to a standardized format
-   */
+
   private handleApiError(error: AxiosError): ApiError {
     if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
       return {
@@ -128,45 +124,22 @@ class AuthService {
     };
   }
 
-  /**
-   * Performs user authentication with the provided credentials
-   */
   public async signIn(credentials: SignInRequest): Promise<SignInResponse> {
     try {
       const axiosInstance = this.createAxiosInstance();
-
-      // Validate input before making the request
       this.validateSignInCredentials(credentials);
-
       const response: AxiosResponse<SignInResponse> = await axiosInstance.post(
         "/sign-in",
         credentials
       );
-
-      // Log successful authentication (remove in production)
-      console.log("Authentication successful:", {
-        status: response.status,
-        user: response.data.user?.username,
-      });
-
       return response.data;
     } catch (error) {
       const apiError = this.handleApiError(error as AxiosError);
-
-      // Log error for debugging (remove sensitive data in production)
-      console.error("Authentication error:", {
-        message: apiError.message,
-        status: apiError.status,
-        code: apiError.code,
-      });
-
       throw apiError;
     }
   }
 
-  /**
-   * Validates sign-in credentials before making the API request
-   */
+
   private validateSignInCredentials(credentials: SignInRequest): void {
     const errors: string[] = [];
 
@@ -197,17 +170,12 @@ class AuthService {
     }
   }
 
-  /**
-   * Validates email format using a regular expression
-   */
+
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }
 
-  /**
-   * Retrieves the current authentication token from local storage
-   */
   public getAuthToken(): string | null {
     if (typeof window !== "undefined") {
       return localStorage.getItem("authToken");
@@ -215,32 +183,24 @@ class AuthService {
     return null;
   }
 
-  /**
-   * Stores the authentication token in local storage
-   */
+
   public setAuthToken(token: string): void {
     if (typeof window !== "undefined") {
       localStorage.setItem("authToken", token);
     }
   }
 
-  /**
-   * Removes the authentication token from local storage
-   */
   public clearAuthToken(): void {
     if (typeof window !== "undefined") {
       localStorage.removeItem("authToken");
     }
   }
 
-  /**
-   * Checks if the user is currently authenticated
-   */
+
   public isAuthenticated(): boolean {
     const token = this.getAuthToken();
     return token !== null && token.length > 0;
   }
 }
 
-// Export a singleton instance of the AuthService
 export const authService = new AuthService();

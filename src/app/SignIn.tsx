@@ -67,8 +67,6 @@ export default function SignIn() {
     } catch (error) {
       const apiError = error as ApiError;
       setError(apiError.message);
-
-      // Clear any existing tokens on authentication failure
       authService.clearAuthToken();
     } finally {
       setLoading(false);
@@ -169,22 +167,6 @@ export default function SignIn() {
             disabled={loading}
             sx={{ mb: 2 }}
           />
-
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="role-label">Role</InputLabel>
-            <Select
-              labelId="role-label"
-              id="role"
-              value={formData.role}
-              label="Role"
-              onChange={handleInputChange("role")}
-              disabled={loading}
-            >
-              <MenuItem value="ADMIN">Admin</MenuItem>
-              <MenuItem value="USER">User</MenuItem>
-              <MenuItem value="MODERATOR">Moderator</MenuItem>
-            </Select>
-          </FormControl>
 
           <TextField
             margin="normal"
