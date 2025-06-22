@@ -1,21 +1,25 @@
 import axios, { AxiosResponse, AxiosError } from "axios";
 
-
 export interface SignInRequest {
   username: string;
   email: string;
-  role: string;
   password: string;
+}
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  createdTime: string | null;
+  updatedTime: string | null;
+  lastLogin: string;
 }
 
 export interface SignInResponse {
   token?: string;
-  user?: {
-    id: string;
-    username: string;
-    email: string;
-    role: string;
-  };
+  type?: string;
+  user?: User;
   message?: string;
 }
 
@@ -24,7 +28,6 @@ export interface ApiError {
   status: number;
   code: string;
 }
-
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
@@ -39,7 +42,6 @@ class AuthService {
     this.timeout = 10000; // 10 seconds timeout
   }
 
-
   private createAxiosInstance() {
     return axios.create({
       baseURL: this.baseUrl,
@@ -50,7 +52,6 @@ class AuthService {
       },
     });
   }
-
 
   private handleApiError(error: AxiosError): ApiError {
     if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
@@ -132,13 +133,18 @@ class AuthService {
         "/sign-in",
         credentials
       );
+
+      // Store user information along with token
+      if (response.data.user) {
+        this.setUserInfo(response.data.user);
+      }
+
       return response.data;
     } catch (error) {
       const apiError = this.handleApiError(error as AxiosError);
       throw apiError;
     }
   }
-
 
   private validateSignInCredentials(credentials: SignInRequest): void {
     const errors: string[] = [];
@@ -157,9 +163,7 @@ class AuthService {
       errors.push("Password is required");
     }
 
-    if (!credentials.role?.trim()) {
-      errors.push("Role is required");
-    }
+
 
     if (errors.length > 0) {
       throw {
@@ -169,7 +173,6 @@ class AuthService {
       } as ApiError;
     }
   }
-
 
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -183,7 +186,6 @@ class AuthService {
     return null;
   }
 
-
   public setAuthToken(token: string): void {
     if (typeof window !== "undefined") {
       localStorage.setItem("authToken", token);
@@ -193,9 +195,28 @@ class AuthService {
   public clearAuthToken(): void {
     if (typeof window !== "undefined") {
       localStorage.removeItem("authToken");
+      localStorage.removeItem("userInfo");
     }
   }
 
+  public setUserInfo(user: User): void {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("userInfo", JSON.stringify(user));
+    }
+  }
+
+  public getUserInfo(): User | null {
+    if (typeof window !== "undefined") {
+      const userInfo = localStorage.getItem("userInfo");
+      return userInfo ? JSON.parse(userInfo) : null;
+    }
+    return null;
+  }
+
+  public getUserRole(): string | null {
+    const user = this.getUserInfo();
+    return user ? user.role : null;
+  }
 
   public isAuthenticated(): boolean {
     const token = this.getAuthToken();

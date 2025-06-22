@@ -27,7 +27,6 @@ export default function SignIn() {
   const [formData, setFormData] = useState<SignInRequest>({
     username: "",
     email: "",
-    role: "ADMIN",
     password: "",
   });
 
