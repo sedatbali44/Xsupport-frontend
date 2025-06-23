@@ -73,7 +73,7 @@ export default function Dashboard() {
     try {
       const response = await ticketService.getTicketsByRole(
         user.role,
-        currentPage - 1, // Backend uses 0-based pagination
+        currentPage - 1,
         10
       );
 
@@ -84,7 +84,7 @@ export default function Dashboard() {
       } else {
         const userTickets = response as Ticket[];
         setTickets(userTickets);
-        setTotalPages(1); // Non-admin users don't have pagination
+        setTotalPages(1); 
       }
     } catch (error: any) {
       setError(error.message || "Failed to fetch tickets");

@@ -31,11 +31,7 @@ export interface ApiError {
 class TicketService {
   private readonly baseEndpoint = "/api/v1/ticket";
 
-  /**
-   * Fetches tickets based on user role
-   * Admin users get all tickets with pagination
-   * Non-admin users get their own tickets
-   */
+
   public async getTicketsByRole(
     userRole: string,
     page: number = 0,
@@ -52,9 +48,7 @@ class TicketService {
     }
   }
 
-  /**
-   * Fetches all tickets for admin users with pagination
-   */
+
   private async getAllTickets(
     page: number = 0,
     size: number = 10
@@ -69,9 +63,7 @@ class TicketService {
     }
   }
 
-  /**
-   * Fetches tickets for the current logged-in user
-   */
+
   private async getOwnTickets(): Promise<Ticket[]> {
     try {
       const response = await apiService.get<Ticket[]>(
@@ -83,9 +75,7 @@ class TicketService {
     }
   }
 
-  /**
-   * Handles API errors and provides user-friendly error messages
-   */
+
   private handleError(error: any): ApiError {
     if (error.message && error.status && error.code) {
       return error as ApiError;

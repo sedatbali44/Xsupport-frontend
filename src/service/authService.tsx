@@ -29,8 +29,7 @@ export interface ApiError {
   code: string;
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_VERSION = "v1";
 
 class AuthService {
@@ -162,8 +161,6 @@ class AuthService {
     if (!credentials.password?.trim()) {
       errors.push("Password is required");
     }
-
-
 
     if (errors.length > 0) {
       throw {
