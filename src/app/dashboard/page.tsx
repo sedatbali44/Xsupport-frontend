@@ -150,10 +150,7 @@ export default function Dashboard() {
     setCurrentPage(value);
   };
 
-  const handleSignOut = () => {
-    authService.clearAuthToken();
-    router.push("/");
-  };
+
 
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
@@ -285,6 +282,24 @@ export default function Dashboard() {
         [field]: event.target.value,
       }));
     };
+
+  const handleSignOut = async () => {
+    setError("");
+    try {
+      await authService.signOut();
+      setSuccess("Successfully signed out");
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
+    } catch (error: any) {
+      setError(
+        "Sign out completed, but there was a server communication issue"
+      );
+      setTimeout(() => {
+        router.push("/");
+      }, 2000);
+    } 
+  };
 
   if (loading) {
     return (

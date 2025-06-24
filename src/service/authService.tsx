@@ -133,13 +133,44 @@ class AuthService {
         credentials
       );
 
-      // Store user information along with token
       if (response.data.user) {
         this.setUserInfo(response.data.user);
       }
 
       return response.data;
     } catch (error) {
+      const apiError = this.handleApiError(error as AxiosError);
+      throw apiError;
+    }
+  }
+
+  public async signOut(): Promise<string> {
+    try {
+      const token = this.getAuthToken();
+      if (!token) {
+        throw {
+          message: "No authentication token found",
+          status: 401,
+          code: "NO_TOKEN_ERROR",
+        } as ApiError;
+      }
+
+      const axiosInstance = this.createAxiosInstance();
+
+      const response: AxiosResponse<string> = await axiosInstance.post(
+        "/sign-out",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      this.clearAuthToken();
+      return response.data;
+    } catch (error) {
+      this.clearAuthToken();
       const apiError = this.handleApiError(error as AxiosError);
       throw apiError;
     }
