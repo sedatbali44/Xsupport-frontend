@@ -413,6 +413,7 @@ export default function Dashboard() {
                     <TableCell>Title</TableCell>
                     <TableCell>Status</TableCell>
                     {isAdmin && <TableCell>Created By</TableCell>}
+                    {!isAdmin && <TableCell>Admin Response</TableCell>}
                     <TableCell>Created Date</TableCell>
                     {isAdmin && <TableCell>Actions</TableCell>}
                   </TableRow>
@@ -451,6 +452,11 @@ export default function Dashboard() {
                           size="small"
                         />
                       </TableCell>
+                      {!isAdmin && (
+                        <TableCell>
+                          {ticket.adminResponse || "No admin response yet"}
+                        </TableCell>
+                      )}
                       {isAdmin && (
                         <TableCell>{ticket.userName || "Unassigned"}</TableCell>
                       )}
