@@ -9,6 +9,7 @@ export interface Ticket {
   createdTime: string;
   updatedTime: string;
   userName: string;
+  adminResponse: string;
 }
 
 export interface CreateTicket {
@@ -24,6 +25,7 @@ export interface UpdateTicket {
   description: string;
   category: Category;
   status: Status;
+  adminResponse: string;
 }
 
 export interface Status {

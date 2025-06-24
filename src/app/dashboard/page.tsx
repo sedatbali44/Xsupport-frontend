@@ -52,6 +52,7 @@ interface TicketFormData {
   description: string;
   category: string;
   status: string;
+  adminResponse: string;
 }
 
 export default function Dashboard() {
@@ -77,6 +78,7 @@ export default function Dashboard() {
     description: "",
     category: "GENERAL",
     status: "OPEN",
+    adminResponse: "",
   });
 
   const [categories, setCategories] = useState<SelectOption[]>([]);
@@ -172,6 +174,7 @@ export default function Dashboard() {
       description: "",
       category: "GENERAL",
       status: "OPEN",
+      adminResponse: "",
     });
   };
 
@@ -185,8 +188,9 @@ export default function Dashboard() {
     setFormData({
       title: ticket.title,
       description: ticket.description,
-      category: "GENERAL", // Default since we don't have category in the response
+      category: "GENERAL",
       status: ticket.status,
+      adminResponse: ticket.adminResponse,
     });
     setEditDialogOpen(true);
   };
@@ -235,6 +239,7 @@ export default function Dashboard() {
         description: formData.description,
         category: formData.category as any,
         status: formData.status as any,
+        adminResponse: formData.adminResponse,
       };
 
       await ticketService.updateTicket(updateRequest);
@@ -589,6 +594,15 @@ export default function Dashboard() {
               rows={4}
               required
             />
+            <TextField
+              label="Admin Response"
+              value={formData.adminResponse}
+              onChange={handleFormChange("adminResponse")}
+              fullWidth
+              multiline
+              rows={4}
+              required
+            />
             <FormControl fullWidth>
               <InputLabel>Category</InputLabel>
               <Select
@@ -631,7 +645,6 @@ export default function Dashboard() {
         </DialogActions>
       </Dialog>
 
-      {/* Delete Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
