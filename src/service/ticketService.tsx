@@ -5,11 +5,39 @@ export interface Ticket {
   title: string;
   description: string;
   status: string;
-  priority: string;
   createdBy: string;
   createdTime: string;
   updatedTime: string;
   userName: string;
+}
+
+export interface CreateTicket {
+  title: string;
+  description: string;
+  category: Category;
+  status: string;
+}
+
+export interface UpdateTicket {
+  id: string;
+  title: string;
+  description: string;
+  category: Category;
+  status: Status;
+}
+
+export interface Status {
+  OPEN: string;
+  ANSWERED: string;
+  CLOSED: string;
+}
+
+export interface Category {
+  TECHNICAL: string;
+  BILLING: string;
+  GENERAL: string;
+  COMPLAINT: string;
+  FEATURE_REQUEST: string;
 }
 
 export interface TicketResponse {
@@ -65,6 +93,42 @@ class TicketService {
     try {
       const response = await apiService.get<Ticket[]>(
         `${this.baseEndpoint}/own-tickets`
+      );
+      return response;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  private async createTicket(request: CreateTicket): Promise<Ticket[]> {
+    try {
+      const response = await apiService.post<Ticket[]>(
+        `${this.baseEndpoint}/create`,
+        request
+      );
+      return response;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  private async updateTicket(request: UpdateTicket): Promise<Ticket[]> {
+    try {
+      const response = await apiService.put<Ticket[]>(
+        `${this.baseEndpoint}/update`,
+        request
+      );
+      return response;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  private async deleteTicket(id: string): Promise<string> {
+    try {
+      const response = await apiService.delete<string>(
+        `${this.baseEndpoint}/delete`,
+        { params: { id } }
       );
       return response;
     } catch (error) {
