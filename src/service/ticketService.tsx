@@ -7,9 +7,9 @@ export interface Ticket {
   status: string;
   priority: string;
   createdBy: string;
-  assignedTo?: string;
   createdTime: string;
   updatedTime: string;
+  userName: string;
 }
 
 export interface TicketResponse {
@@ -31,7 +31,6 @@ export interface ApiError {
 class TicketService {
   private readonly baseEndpoint = "/api/v1/ticket";
 
-
   public async getTicketsByRole(
     userRole: string,
     page: number = 0,
@@ -48,7 +47,6 @@ class TicketService {
     }
   }
 
-
   private async getAllTickets(
     page: number = 0,
     size: number = 10
@@ -63,7 +61,6 @@ class TicketService {
     }
   }
 
-
   private async getOwnTickets(): Promise<Ticket[]> {
     try {
       const response = await apiService.get<Ticket[]>(
@@ -74,7 +71,6 @@ class TicketService {
       throw this.handleError(error);
     }
   }
-
 
   private handleError(error: any): ApiError {
     if (error.message && error.status && error.code) {

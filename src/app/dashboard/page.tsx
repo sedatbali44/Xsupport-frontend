@@ -84,7 +84,7 @@ export default function Dashboard() {
       } else {
         const userTickets = response as Ticket[];
         setTickets(userTickets);
-        setTotalPages(1); 
+        setTotalPages(1);
       }
     } catch (error: any) {
       setError(error.message || "Failed to fetch tickets");
@@ -105,28 +105,13 @@ export default function Dashboard() {
     router.push("/");
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority?.toLowerCase()) {
-      case "high":
-        return "error";
-      case "medium":
-        return "warning";
-      case "low":
-        return "success";
-      default:
-        return "default";
-    }
-  };
-
   const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "open":
+    switch (status.toUpperCase()) {
+      case "OPEN":
         return "primary";
-      case "in_progress":
+      case "ANSWERED":
         return "warning";
-      case "resolved":
-        return "success";
-      case "closed":
+      case "CLOSED":
         return "default";
       default:
         return "default";
@@ -165,7 +150,6 @@ export default function Dashboard() {
         p: 3,
       }}
     >
-      {/* Header */}
       <Box
         sx={{
           display: "flex",
@@ -234,11 +218,7 @@ export default function Dashboard() {
                     <TableCell>ID</TableCell>
                     <TableCell>Title</TableCell>
                     <TableCell>Status</TableCell>
-                    <TableCell>Priority</TableCell>
-                    <TableCell>Created By</TableCell>
-                    {user.role === "ADMIN" && (
-                      <TableCell>Assigned To</TableCell>
-                    )}
+                    {user.role === "ADMIN" && <TableCell>Created By</TableCell>}
                     <TableCell>Created Date</TableCell>
                   </TableRow>
                 </TableHead>
@@ -276,18 +256,8 @@ export default function Dashboard() {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={ticket.priority}
-                          color={getPriorityColor(ticket.priority)}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>{ticket.createdBy}</TableCell>
                       {user.role === "ADMIN" && (
-                        <TableCell>
-                          {ticket.assignedTo || "Unassigned"}
-                        </TableCell>
+                        <TableCell>{ticket.userName || "Unassigned"}</TableCell>
                       )}
                       <TableCell>
                         {new Date(ticket.createdTime).toLocaleDateString()}
