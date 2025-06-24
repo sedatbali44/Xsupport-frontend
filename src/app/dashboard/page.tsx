@@ -150,8 +150,6 @@ export default function Dashboard() {
     setCurrentPage(value);
   };
 
-
-
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case "OPEN":
@@ -298,7 +296,7 @@ export default function Dashboard() {
       setTimeout(() => {
         router.push("/");
       }, 2000);
-    } 
+    }
   };
 
   if (loading) {
@@ -386,16 +384,14 @@ export default function Dashboard() {
           <Typography variant="h5">
             {isAdmin ? "All Tickets" : "My Tickets"}
           </Typography>
-          {isAdmin && (
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleCreateOpen}
-              sx={{ mb: 2 }}
-            >
-              Create Ticket
-            </Button>
-          )}
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleCreateOpen}
+            sx={{ mb: 2 }}
+          >
+            Create Ticket
+          </Button>
         </Box>
 
         {ticketsLoading ? (
