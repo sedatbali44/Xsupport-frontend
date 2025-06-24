@@ -56,8 +56,45 @@ export interface ApiError {
   code: string;
 }
 
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
 class TicketService {
   private readonly baseEndpoint = "/api/v1/ticket";
+
+  private readonly categories: SelectOption[] = [
+    { value: "TECHNICAL", label: "Technical" },
+    { value: "BILLING", label: "Billing" },
+    { value: "GENERAL", label: "General" },
+    { value: "COMPLAINT", label: "Complaint" },
+    { value: "FEATURE_REQUEST", label: "Feature Request" },
+  ];
+
+  private readonly statuses: SelectOption[] = [
+    { value: "Open", label: "Open" },
+    { value: "Answered", label: "Answered" },
+    { value: "Closed", label: "Closed" },
+  ];
+
+  public getCategories(): SelectOption[] {
+    return [...this.categories];
+  }
+
+  public getStatuses(): SelectOption[] {
+    return [...this.statuses];
+  }
+
+  public getCategoryLabel(value: string): string {
+    const category = this.categories.find((cat) => cat.value === value);
+    return category ? category.label : value;
+  }
+
+  public getStatusLabel(value: string): string {
+    const status = this.statuses.find((stat) => stat.value === value);
+    return status ? status.label : value;
+  }
 
   public async getTicketsByRole(
     userRole: string,

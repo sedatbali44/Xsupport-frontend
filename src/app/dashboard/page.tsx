@@ -28,7 +28,6 @@ import {
   MenuItem,
   IconButton,
   Tooltip,
-  Fab,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -44,6 +43,7 @@ import {
   TicketResponse,
   CreateTicket,
   UpdateTicket,
+  SelectOption,
 } from "../../service/ticketService";
 import { useEffect, useState } from "react";
 
@@ -67,13 +67,11 @@ export default function Dashboard() {
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
 
-  // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
   const [editDialogOpen, setEditDialogOpen] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
-  // Form data
   const [formData, setFormData] = useState<TicketFormData>({
     title: "",
     description: "",
@@ -81,19 +79,13 @@ export default function Dashboard() {
     status: "OPEN",
   });
 
-  const categories = [
-    { value: "TECHNICAL", label: "Technical" },
-    { value: "BILLING", label: "Billing" },
-    { value: "GENERAL", label: "General" },
-    { value: "COMPLAINT", label: "Complaint" },
-    { value: "FEATURE_REQUEST", label: "Feature Request" },
-  ];
-
-  const statuses = [
-    { value: "OPEN", label: "Open" },
-    { value: "ANSWERED", label: "Answered" },
-    { value: "CLOSED", label: "Closed" },
-  ];
+  const [categories, setCategories] = useState<SelectOption[]>([]);
+  const [statuses, setStatuses] = useState<SelectOption[]>([]);
+  const isAdmin = user?.role === "ADMIN";
+  useEffect(() => {
+    setCategories(ticketService.getCategories());
+    setStatuses(ticketService.getStatuses());
+  }, []);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -133,7 +125,7 @@ export default function Dashboard() {
         10
       );
 
-      if (user.role === "ADMIN") {
+      if (isAdmin) {
         const adminResponse = response as TicketResponse;
         setTickets(adminResponse.content);
         setTotalPages(adminResponse.totalPages);
@@ -372,9 +364,9 @@ export default function Dashboard() {
           }}
         >
           <Typography variant="h5">
-            {user.role === "ADMIN" ? "All Tickets" : "My Tickets"}
+            {isAdmin ? "All Tickets" : "My Tickets"}
           </Typography>
-          {user.role === "ADMIN" && (
+          {isAdmin && (
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -397,7 +389,7 @@ export default function Dashboard() {
                 No tickets found
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                {user.role === "ADMIN"
+                {isAdmin
                   ? "There are no tickets in the system yet."
                   : "You have no assigned tickets at the moment."}
               </Typography>
@@ -415,9 +407,9 @@ export default function Dashboard() {
                     <TableCell>ID</TableCell>
                     <TableCell>Title</TableCell>
                     <TableCell>Status</TableCell>
-                    {user.role === "ADMIN" && <TableCell>Created By</TableCell>}
+                    {isAdmin && <TableCell>Created By</TableCell>}
                     <TableCell>Created Date</TableCell>
-                    {user.role === "ADMIN" && <TableCell>Actions</TableCell>}
+                    {isAdmin && <TableCell>Actions</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -449,18 +441,18 @@ export default function Dashboard() {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={ticket.status}
+                          label={ticketService.getStatusLabel(ticket.status)}
                           color={getStatusColor(ticket.status)}
                           size="small"
                         />
                       </TableCell>
-                      {user.role === "ADMIN" && (
+                      {isAdmin && (
                         <TableCell>{ticket.userName || "Unassigned"}</TableCell>
                       )}
                       <TableCell>
                         {new Date(ticket.createdTime).toLocaleDateString()}
                       </TableCell>
-                      {user.role === "ADMIN" && (
+                      {isAdmin && (
                         <TableCell>
                           <Box sx={{ display: "flex", gap: 1 }}>
                             <Tooltip title="Edit">
@@ -489,7 +481,7 @@ export default function Dashboard() {
                 </TableBody>
               </Table>
             </TableContainer>
-            {user.role === "ADMIN" && totalPages > 1 && (
+            {isAdmin && totalPages > 1 && (
               <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
                 <Pagination
                   count={totalPages}
