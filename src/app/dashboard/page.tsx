@@ -17,7 +17,24 @@ import {
   Pagination,
   Card,
   CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  IconButton,
+  Tooltip,
+  Fab,
 } from "@mui/material";
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+} from "@mui/icons-material";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { authService, User } from "../../service/authService";
@@ -25,19 +42,58 @@ import {
   ticketService,
   Ticket,
   TicketResponse,
+  CreateTicket,
+  UpdateTicket,
 } from "../../service/ticketService";
 import { useEffect, useState } from "react";
+
+interface TicketFormData {
+  title: string;
+  description: string;
+  category: string;
+  status: string;
+}
 
 export default function Dashboard() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [ticketsLoading, setTicketsLoading] = useState<boolean>(false);
+  const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [error, setError] = useState<string>("");
+  const [success, setSuccess] = useState<string>("");
+
+  // Dialog states
+  const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
+  const [editDialogOpen, setEditDialogOpen] = useState<boolean>(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+
+  // Form data
+  const [formData, setFormData] = useState<TicketFormData>({
+    title: "",
+    description: "",
+    category: "GENERAL",
+    status: "OPEN",
+  });
+
+  const categories = [
+    { value: "TECHNICAL", label: "Technical" },
+    { value: "BILLING", label: "Billing" },
+    { value: "GENERAL", label: "General" },
+    { value: "COMPLAINT", label: "Complaint" },
+    { value: "FEATURE_REQUEST", label: "Feature Request" },
+  ];
+
+  const statuses = [
+    { value: "OPEN", label: "Open" },
+    { value: "ANSWERED", label: "Answered" },
+    { value: "CLOSED", label: "Closed" },
+  ];
 
   useEffect(() => {
     const checkAuth = () => {
@@ -118,6 +174,121 @@ export default function Dashboard() {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      category: "GENERAL",
+      status: "OPEN",
+    });
+  };
+
+  const handleCreateOpen = () => {
+    resetForm();
+    setCreateDialogOpen(true);
+  };
+
+  const handleEditOpen = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setFormData({
+      title: ticket.title,
+      description: ticket.description,
+      category: "GENERAL", // Default since we don't have category in the response
+      status: ticket.status,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteOpen = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCreateSubmit = async () => {
+    setActionLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const createRequest: CreateTicket = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category as any,
+        status: formData.status,
+      };
+
+      await ticketService.createTicket(createRequest);
+      setSuccess("Ticket created successfully");
+      setCreateDialogOpen(false);
+      resetForm();
+      fetchTickets();
+    } catch (error: any) {
+      setError(error.message || "Failed to create ticket");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    if (!selectedTicket) return;
+
+    setActionLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const updateRequest: UpdateTicket = {
+        id: selectedTicket.id.toString(),
+        title: formData.title,
+        description: formData.description,
+        category: formData.category as any,
+        status: formData.status as any,
+      };
+
+      await ticketService.updateTicket(updateRequest);
+      setSuccess("Ticket updated successfully");
+      setEditDialogOpen(false);
+      resetForm();
+      setSelectedTicket(null);
+      fetchTickets();
+    } catch (error: any) {
+      setError(error.message || "Failed to update ticket");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteSubmit = async () => {
+    if (!selectedTicket) return;
+
+    setActionLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      await ticketService.deleteTicket(selectedTicket.id.toString());
+      setSuccess("Ticket deleted successfully");
+      setDeleteDialogOpen(false);
+      setSelectedTicket(null);
+      fetchTickets();
+    } catch (error: any) {
+      setError(error.message || "Failed to delete ticket");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleFormChange =
+    (field: keyof TicketFormData) =>
+    (
+      event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | any
+    ) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: event.target.value,
+      }));
+    };
+
   if (loading) {
     return (
       <Box
@@ -148,6 +319,7 @@ export default function Dashboard() {
         background: "var(--background)",
         color: "var(--foreground)",
         p: 3,
+        position: "relative",
       }}
     >
       <Box
@@ -184,10 +356,35 @@ export default function Dashboard() {
         </Alert>
       )}
 
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {success}
+        </Alert>
+      )}
+
       <Box>
-        <Typography variant="h5" sx={{ mb: 3 }}>
-          {user.role === "ADMIN" ? "All Tickets" : "My Tickets"}
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <Typography variant="h5">
+            {user.role === "ADMIN" ? "All Tickets" : "My Tickets"}
+          </Typography>
+          {user.role === "ADMIN" && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreateOpen}
+              sx={{ mb: 2 }}
+            >
+              Create Ticket
+            </Button>
+          )}
+        </Box>
 
         {ticketsLoading ? (
           <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
@@ -220,6 +417,7 @@ export default function Dashboard() {
                     <TableCell>Status</TableCell>
                     {user.role === "ADMIN" && <TableCell>Created By</TableCell>}
                     <TableCell>Created Date</TableCell>
+                    {user.role === "ADMIN" && <TableCell>Actions</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -262,6 +460,30 @@ export default function Dashboard() {
                       <TableCell>
                         {new Date(ticket.createdTime).toLocaleDateString()}
                       </TableCell>
+                      {user.role === "ADMIN" && (
+                        <TableCell>
+                          <Box sx={{ display: "flex", gap: 1 }}>
+                            <Tooltip title="Edit">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleEditOpen(ticket)}
+                                color="primary"
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDeleteOpen(ticket)}
+                                color="error"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -280,6 +502,186 @@ export default function Dashboard() {
           </>
         )}
       </Box>
+
+      {/* Create Dialog */}
+      <Dialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Create New Ticket</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <TextField
+              label="Title"
+              value={formData.title}
+              onChange={handleFormChange("title")}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Description"
+              value={formData.description}
+              onChange={handleFormChange("description")}
+              fullWidth
+              multiline
+              rows={4}
+              required
+            />
+            <FormControl fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={formData.category}
+                onChange={handleFormChange("category")}
+                label="Category"
+              >
+                {categories.map((category) => (
+                  <MenuItem key={category.value} value={category.value}>
+                    {category.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={formData.status}
+                onChange={handleFormChange("status")}
+                label="Status"
+              >
+                {statuses.map((status) => (
+                  <MenuItem key={status.value} value={status.value}>
+                    {status.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleCreateSubmit}
+            variant="contained"
+            disabled={actionLoading || !formData.title || !formData.description}
+          >
+            {actionLoading ? <CircularProgress size={20} /> : "Create"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Edit Ticket</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <TextField
+              label="Title"
+              value={formData.title}
+              onChange={handleFormChange("title")}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Description"
+              value={formData.description}
+              onChange={handleFormChange("description")}
+              fullWidth
+              multiline
+              rows={4}
+              required
+            />
+            <FormControl fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={formData.category}
+                onChange={handleFormChange("category")}
+                label="Category"
+              >
+                {categories.map((category) => (
+                  <MenuItem key={category.value} value={category.value}>
+                    {category.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={formData.status}
+                onChange={handleFormChange("status")}
+                label="Status"
+              >
+                {statuses.map((status) => (
+                  <MenuItem key={status.value} value={status.value}>
+                    {status.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleEditSubmit}
+            variant="contained"
+            disabled={actionLoading || !formData.title || !formData.description}
+          >
+            {actionLoading ? <CircularProgress size={20} /> : "Update"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete Ticket</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this ticket? This action cannot be
+            undone.
+          </Typography>
+          {selectedTicket && (
+            <Box
+              sx={{
+                mt: 2,
+                p: 2,
+                bgcolor: "rgba(255,255,255,0.05)",
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                {selectedTicket.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                ID: {selectedTicket.id}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleDeleteSubmit}
+            variant="contained"
+            color="error"
+            disabled={actionLoading}
+          >
+            {actionLoading ? <CircularProgress size={20} /> : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

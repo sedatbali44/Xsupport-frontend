@@ -100,7 +100,7 @@ class TicketService {
     }
   }
 
-  private async createTicket(request: CreateTicket): Promise<Ticket[]> {
+  async createTicket(request: CreateTicket): Promise<Ticket[]> {
     try {
       const response = await apiService.post<Ticket[]>(
         `${this.baseEndpoint}/create`,
@@ -112,7 +112,7 @@ class TicketService {
     }
   }
 
-  private async updateTicket(request: UpdateTicket): Promise<Ticket[]> {
+  async updateTicket(request: UpdateTicket): Promise<Ticket[]> {
     try {
       const response = await apiService.put<Ticket[]>(
         `${this.baseEndpoint}/update`,
@@ -124,7 +124,7 @@ class TicketService {
     }
   }
 
-  private async deleteTicket(id: string): Promise<string> {
+  async deleteTicket(id: string): Promise<string> {
     try {
       const response = await apiService.delete<string>(
         `${this.baseEndpoint}/delete`,
